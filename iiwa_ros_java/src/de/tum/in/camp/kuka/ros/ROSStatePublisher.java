@@ -13,6 +13,8 @@ import org.ros.node.topic.Publisher;
 import org.ros.time.NtpTimeProvider;
 
 import com.kuka.connectivity.motionModel.smartServo.SmartServo;
+import com.kuka.roboticsAPI.applicationModel.RoboticsAPIApplication;
+import com.kuka.roboticsAPI.applicationModel.RoboticsAPIApplicationState;
 import com.kuka.roboticsAPI.applicationModel.tasks.RoboticsAPIBackgroundTask;
 import com.kuka.roboticsAPI.controllerModel.Controller;
 import com.kuka.roboticsAPI.deviceModel.LBR;
@@ -32,7 +34,7 @@ import com.kuka.roboticsAPI.geometricModel.Tool;
  * @see UseRoboticsAPIContext
  *
  */
-public class ROSStatePublisher extends RoboticsAPIBackgroundTask {
+public class ROSStatePublisher extends RoboticsAPIApplication {
     @Inject
     private Controller kUKA_Sunrise_Cabinet_1;
     private LBR robot;
@@ -42,7 +44,10 @@ public class ROSStatePublisher extends RoboticsAPIBackgroundTask {
     private NodeConfiguration nodeConfPublisher;
     private iiwaJointPublisher publisher;
 
-    @Override
+    private boolean initialized = false;
+    private boolean running = true;
+
+    //@Override
     public void initialize() {
         robot = getContext().getDeviceFromType(LBR.class);
 
@@ -77,14 +82,14 @@ public class ROSStatePublisher extends RoboticsAPIBackgroundTask {
             return;
         }
 
-        //initSuccessful = true;  // We cannot throw here.
+        initialized = true;  // We cannot throw here.
     }
 
     @Override
     public void run() {
-        //if (!initSuccessful) {
-        //    throw new RuntimeException("Could not init the RoboticApplication successfully");
-        //}
+        if (! initialized) {
+            throw new RuntimeException("Could not init the RoboticApplication successfully");
+        }
 
         try {
             getLogger().info("Waiting for ROS Master to connect... ");
@@ -103,17 +108,25 @@ public class ROSStatePublisher extends RoboticsAPIBackgroundTask {
 
         // The run loop
         getLogger().info("Starting the ROS publishing loop...");
-        boolean running = true;
         try {
+        	double pubFreq = config.getJointStatePublishFreq();
             while(running) {
-                // This will publish the current robot state on the various ROS topics.
                 publisher.publishCurrentState(robot);
+                Thread.sleep((long) (1000.0 / pubFreq));
             }
         }
         catch (Exception e) {
-            getLogger().info("ROS control loop aborted. " + e.toString());
+            getLogger().info("ROS publishing loop aborted. " + e.toString());
         } finally {
-            getLogger().info("ROS control loop has ended. Application terminated.");
+            getLogger().info("ROS publishing loop has ended. Application terminated.");
         }
     }
+
+    @Override
+	public void onApplicationStateChanged(RoboticsAPIApplicationState state) {
+		if (state == RoboticsAPIApplicationState.STOPPING) {
+			running = false;
+		}
+		super.onApplicationStateChanged(state);
+	};
 }
