@@ -90,6 +90,7 @@ public class iiwaJointPublisher extends AbstractNodeMain {
      */
     @Override
     public void onStart(final ConnectedNode connectedNode) {
+    	System.out.println("Started joint publisher node");
         node = connectedNode;
         jointStatesPublisher = connectedNode.newPublisher("joint_states", sensor_msgs.JointState._TYPE);
     }

@@ -19,6 +19,7 @@ import com.kuka.roboticsAPI.applicationModel.tasks.RoboticsAPIBackgroundTask;
 import com.kuka.roboticsAPI.controllerModel.Controller;
 import com.kuka.roboticsAPI.deviceModel.LBR;
 import com.kuka.roboticsAPI.geometricModel.Tool;
+import com.kuka.task.ITaskManager;
 
 /**
  * Implementation of a background task.
@@ -34,14 +35,16 @@ import com.kuka.roboticsAPI.geometricModel.Tool;
  * @see UseRoboticsAPIContext
  *
  */
-public class ROSStatePublisher extends RoboticsAPIApplication {
+public class ROSStatePublisher extends RoboticsAPIBackgroundTask {
     @Inject
     private Controller kUKA_Sunrise_Cabinet_1;
     private LBR robot;
-    private iiwaConfiguration config;
 
     private NodeMainExecutor nodeMainExecutor;
+	private NodeConfiguration nodeConfConfiguration;
     private NodeConfiguration nodeConfPublisher;
+
+    private iiwaConfiguration config;
     private iiwaJointPublisher publisher;
 
     private boolean initialized = false;
@@ -57,6 +60,11 @@ public class ROSStatePublisher extends RoboticsAPIApplication {
         // ROS initialization.
         try {
             URI uri = new URI(iiwaConfiguration.getMasterURI());
+            
+			nodeConfConfiguration = NodeConfiguration.newPublic(iiwaConfiguration.getRobotIp());
+			nodeConfConfiguration.setTimeProvider(iiwaConfiguration.getTimeProvider());
+			nodeConfConfiguration.setNodeName(iiwaConfiguration.getRobotName() + "/iiwa_configuration");
+			nodeConfConfiguration.setMasterUri(uri);
 
             nodeConfPublisher = NodeConfiguration.newPublic(iiwaConfiguration.getRobotIp());
             nodeConfPublisher.setTimeProvider(iiwaConfiguration.getTimeProvider());
@@ -72,6 +80,7 @@ public class ROSStatePublisher extends RoboticsAPIApplication {
         try {
             // Start the Publisher node with the set up configuration.
             nodeMainExecutor = DefaultNodeMainExecutor.newDefault();
+            nodeMainExecutor.execute(config, nodeConfConfiguration);
             nodeMainExecutor.execute(publisher, nodeConfPublisher);
 
             getLogger().info("ROS Node Executor initialized.");
@@ -116,12 +125,29 @@ public class ROSStatePublisher extends RoboticsAPIApplication {
             }
         }
         catch (Exception e) {
-            getLogger().info("ROS publishing loop aborted. " + e.toString());
+            getLogger().info("ROS publishing loop aborted" + "" +
+            		         " (" + e.toString() + ") :" + e.getMessage());
         } finally {
-            getLogger().info("ROS publishing loop has ended. Application terminated.");
+            getLogger().info("ROS publishing loop has ended. Shutting down...");
+        	cleanup();
         }
+        getLogger().info("Application finished");
+    }
+    
+    @Override
+    public void dispose() {
+    	try {
+    		cleanup();
+    	}
+    	catch (Exception e) {
+    		getLogger().error("Shutdown error: " + e.getMessage());
+    	}
+    	finally {
+    		super.dispose();
+    	}
     }
 
+    /*
     @Override
 	public void onApplicationStateChanged(RoboticsAPIApplicationState state) {
 		if (state == RoboticsAPIApplicationState.STOPPING) {
@@ -129,4 +155,15 @@ public class ROSStatePublisher extends RoboticsAPIApplication {
 		}
 		super.onApplicationStateChanged(state);
 	};
+	*/
+	
+	void cleanup() {
+		running = false;
+		if (nodeMainExecutor != null) {
+			getLogger().info("Stopping ROS nodes");
+			nodeMainExecutor.shutdown();	
+			nodeMainExecutor.getScheduledExecutorService().shutdownNow();
+		}
+		getLogger().info("Stopped ROS nodes");
+	}
 }
