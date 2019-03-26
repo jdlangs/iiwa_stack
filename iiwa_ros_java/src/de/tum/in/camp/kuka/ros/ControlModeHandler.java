@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2016-2019 Salvatore Virga - salvo.virga@tum.de, Marco Esposito - marco.esposito@tum.de
- * Technische Universität München Chair for Computer Aided Medical Procedures and Augmented Reality Fakultät
- * für Informatik / I16, Boltzmannstraße 3, 85748 Garching bei München, Germany http://campar.in.tum.de All
+ * Technische Universitï¿½t Mï¿½nchen Chair for Computer Aided Medical Procedures and Augmented Reality Fakultï¿½t
+ * fï¿½r Informatik / I16, Boltzmannstraï¿½e 3, 85748 Garching bei Mï¿½nchen, Germany http://campar.in.tum.de All
  * rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -28,14 +28,12 @@ package de.tum.in.camp.kuka.ros;
 import com.kuka.common.ThreadUtil;
 import com.kuka.connectivity.motionModel.smartServo.ServoMotion;
 import com.kuka.connectivity.motionModel.smartServo.SmartServo;
-import com.kuka.connectivity.motionModel.smartServoLIN.SmartServoLIN;
 import com.kuka.roboticsAPI.controllerModel.sunrise.SunriseExecutionService;
 import com.kuka.roboticsAPI.deviceModel.LBR;
 import com.kuka.roboticsAPI.geometricModel.CartDOF;
 import com.kuka.roboticsAPI.geometricModel.ObjectFrame;
 import com.kuka.roboticsAPI.geometricModel.Tool;
 import com.kuka.roboticsAPI.geometricModel.Workpiece;
-import com.kuka.roboticsAPI.geometricModel.World;
 import com.kuka.roboticsAPI.motionModel.controlModeModel.CartesianImpedanceControlMode;
 import com.kuka.roboticsAPI.motionModel.controlModeModel.CartesianSineImpedanceControlMode;
 import com.kuka.roboticsAPI.motionModel.controlModeModel.IMotionControlMode;
@@ -95,6 +93,7 @@ public class ControlModeHandler {
     return motion;
   }
 
+  /*
   public SmartServoLIN changeSmartServoControlMode(SmartServoLIN motion, IMotionControlMode controlMode) {
     SmartServoLIN oldMotion = motion;
     motion = createSmartServoLinMotion();
@@ -108,7 +107,8 @@ public class ControlModeHandler {
     switchMotion(motion, oldMotion);
     return motion;
   }
-
+  */
+  
   public SmartServo changeSmartServoControlMode(SmartServo motion, iiwa_msgs.ConfigureControlModeRequest request) {
     SmartServo oldMotion = motion;
     motion = createSmartServoMotion();
@@ -131,6 +131,7 @@ public class ControlModeHandler {
     return motion;
   }
 
+  /*
   public SmartServoLIN changeSmartServoControlMode(SmartServoLIN motion, iiwa_msgs.ConfigureControlModeRequest request) {
     SmartServoLIN oldMotion = motion;
     motion = createSmartServoLinMotion();
@@ -152,6 +153,7 @@ public class ControlModeHandler {
     switchMotion(motion, oldMotion);
     return motion;
   }
+  */
 
   // TODO: doc
   @SuppressWarnings("rawtypes")
@@ -172,6 +174,7 @@ public class ControlModeHandler {
   /**
    * Given a current SmartServoLin motion, it return a SmartServo motion with the same control mode.
    */
+  /*
   public SmartServo switchToSmartServo(SmartServoLIN linearMotion) {
     Logger.debug("Switching to SmartServo motion");
     IMotionControlMode currentMode = linearMotion.getMode();
@@ -188,10 +191,12 @@ public class ControlModeHandler {
     switchMotion(newMotion, linearMotion);
     return newMotion;
   }
+  */
 
   /**
    * Given a current SmartServo motion, it return a SmartServoLIN motion with the same control mode.
    */
+  /*
   public SmartServoLIN switchToSmartServoLIN(SmartServo motion) {
     Logger.debug("Switching to SmartServoLIN motion");
     IMotionControlMode currentMode = motion.getMode();
@@ -209,6 +214,7 @@ public class ControlModeHandler {
     switchMotion(newMotion, motion);
     return newMotion;
   }
+  */
 
   /**
    * Validates the robot for Impedance control, it something fails here Impedance control is not possible.
@@ -242,6 +248,7 @@ public class ControlModeHandler {
     return motion;
   }
 
+  /*
   public SmartServoLIN createSmartServoLinMotion() {
     SmartServoLIN linearMotion = new SmartServoLIN(robot.getCurrentCartesianPosition(endpointFrame));
     linearMotion.setReferenceFrame(World.Current.getRootFrame());
@@ -256,6 +263,7 @@ public class ControlModeHandler {
 
     return linearMotion;
   }
+  */
 
   /**
    * Given the parameters from the SmartServo service, it builds up the new control mode to use.
@@ -506,12 +514,14 @@ public class ControlModeHandler {
     motion.getRuntime().stopMotion();
   }
 
+  /*
   public void disableSmartServo(SmartServoLIN motion) {
     if (!(currentControlMode instanceof PositionControlMode)) {
       changeSmartServoControlMode(motion, new PositionControlMode(true));
     }
     motion.getRuntime().stopMotion();
   }
+  */
 
   public SmartServo enableSmartServo(SmartServo motion) {
     return changeSmartServoControlMode(motion, lastSmartServoRequest);
@@ -521,11 +531,12 @@ public class ControlModeHandler {
      */
   }
 
-  public SmartServoLIN enableSmartServo(SmartServoLIN linearMotion) {
-    return changeSmartServoControlMode(linearMotion, lastSmartServoRequest);
+  //
+  //public SmartServoLIN enableSmartServo(SmartServoLIN linearMotion) {
+    //return changeSmartServoControlMode(linearMotion, lastSmartServoRequest);
     /*
      * linearMotion.setMode(getCurrentMode()); endpointFrame.moveAsync(linearMotion);
      * linearMotion.getRuntime().setGoalReachedEventHandler(handler);
      */
-  }
+  //}
 }

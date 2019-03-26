@@ -288,12 +288,14 @@ public class ROSSmartServo extends ROSBaseApplication {
         controlModeHandler.setEndpointFrame(endpointFrame);
         
         // update motion
+        /*
         if (lastCommandType == CommandType.CARTESIAN_POSE_LIN) {
           linearMotion = controlModeHandler.switchToSmartServoLIN(motion);
         }
         else {
           motion = controlModeHandler.switchToSmartServo(linearMotion);
         }
+        */
       }
     });
 
@@ -367,10 +369,12 @@ public class ROSSmartServo extends ROSBaseApplication {
             moveToCartesianPose(subscriber.getCartesianPose(), null);
             break;
           }
+          /*
           case CARTESIAN_POSE_LIN: {
             moveToCartesianPoseLin(subscriber.getCartesianPoseLin(), null);
             break;
           }
+          */
           case CARTESIAN_VELOCITY: {
             moveByCartesianVelocity(subscriber.getCartesianVelocity());
             break;
@@ -414,13 +418,13 @@ public class ROSSmartServo extends ROSBaseApplication {
    */
   protected void activateMotionMode(CommandType commandType) {
     if (commandType == lastCommandType) {
-      if (commandType == commandType.POINT_TO_POINT_SPLINE) {
+      if (commandType == CommandType.POINT_TO_POINT_SPLINE) {
         // For some reason the application gets stuck when executing two spline motions
         // in a row. Switching the control mode to SmartServo and back in between 
         // resolves the issue.
         // TODO: Find a cleaner way of solving this issue 
-        activateMotionMode(commandType.CARTESIAN_POSE_LIN);
-        activateMotionMode(commandType.POINT_TO_POINT_SPLINE);
+        activateMotionMode(CommandType.CARTESIAN_POSE_LIN);
+        activateMotionMode(CommandType.POINT_TO_POINT_SPLINE);
       }
       return;
     }
@@ -430,7 +434,7 @@ public class ROSSmartServo extends ROSBaseApplication {
     if (commandType == CommandType.CARTESIAN_POSE || commandType == CommandType.CARTESIAN_VELOCITY || commandType == CommandType.JOINT_POSITION
         || commandType == CommandType.JOINT_POSITION_VELOCITY || commandType == CommandType.JOINT_VELOCITY) {
       if (lastCommandType == CommandType.CARTESIAN_POSE_LIN || lastCommandType == null) {
-        motion = controlModeHandler.switchToSmartServo(linearMotion);
+        //motion = controlModeHandler.switchToSmartServo(linearMotion);
       }
       else if (lastCommandType == CommandType.POINT_TO_POINT || lastCommandType == CommandType.POINT_TO_POINT_LIN || lastCommandType == CommandType.POINT_TO_POINT_SPLINE) {
         motion = controlModeHandler.enableSmartServo(motion);
@@ -438,7 +442,7 @@ public class ROSSmartServo extends ROSBaseApplication {
     }
     else if (commandType == CommandType.CARTESIAN_POSE_LIN) {
       if (lastCommandType != CommandType.CARTESIAN_POSE_LIN || lastCommandType == null) {
-        linearMotion = controlModeHandler.switchToSmartServoLIN(motion);
+        //linearMotion = controlModeHandler.switchToSmartServoLIN(motion);
       }
       else if (lastCommandType == CommandType.POINT_TO_POINT || lastCommandType == CommandType.POINT_TO_POINT_LIN || lastCommandType == CommandType.POINT_TO_POINT_SPLINE) {
         linearMotion = controlModeHandler.enableSmartServo(linearMotion);
@@ -457,8 +461,8 @@ public class ROSSmartServo extends ROSBaseApplication {
         // in a row. Switching the control mode to SmartServo and back in between 
         // resolves the issue.
         // TODO: Find a cleaner way of solving this issue 
-        activateMotionMode(commandType.CARTESIAN_POSE_LIN);
-        activateMotionMode(commandType.POINT_TO_POINT_SPLINE);
+        activateMotionMode(CommandType.CARTESIAN_POSE_LIN);
+        activateMotionMode(CommandType.POINT_TO_POINT_SPLINE);
       }
     }
     else {
@@ -484,6 +488,7 @@ public class ROSSmartServo extends ROSBaseApplication {
     }
   }
 
+  /*
   protected void moveToCartesianPoseLin(PoseStamped commandPosition, RedundancyInformation redundancy) {
     activateMotionMode(CommandType.CARTESIAN_POSE_LIN);
     commandPosition = subscriber.transformPose(commandPosition, robotBaseFrameID);
@@ -494,6 +499,7 @@ public class ROSSmartServo extends ROSBaseApplication {
       Logger.warn("Invalid motion target pose");
     }
   }
+  */
 
   protected void movePointToPoint(PoseStamped commandPosition, RedundancyInformation redundancy) {
     activateMotionMode(CommandType.POINT_TO_POINT);

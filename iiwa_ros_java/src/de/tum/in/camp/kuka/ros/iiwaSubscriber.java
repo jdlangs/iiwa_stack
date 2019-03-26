@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2016-2019 Salvatore Virga - salvo.virga@tum.de, Marco Esposito - marco.esposito@tum.de
- * Technische Universität München Chair for Computer Aided Medical Procedures and Augmented Reality Fakultät
- * für Informatik / I16, Boltzmannstraße 3, 85748 Garching bei München, Germany http://campar.in.tum.de All
+ * Technische Universitï¿½t Mï¿½nchen Chair for Computer Aided Medical Procedures and Augmented Reality Fakultï¿½t
+ * fï¿½r Informatik / I16, Boltzmannstraï¿½e 3, 85748 Garching bei Mï¿½nchen, Germany http://campar.in.tum.de All
  * rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
@@ -27,15 +27,7 @@ package de.tum.in.camp.kuka.ros;
 
 import iiwa_msgs.CartesianPose;
 import iiwa_msgs.RedundancyInformation;
-import geometry_msgs.Point;
 import geometry_msgs.PoseStamped;
-import geometry_msgs.Quaternion;
-
-import javax.vecmath.Matrix3d;
-import javax.vecmath.Matrix4d;
-import javax.vecmath.Quat4d;
-import javax.vecmath.Vector3d;
-
 import org.ros.message.MessageListener;
 import org.ros.namespace.GraphName;
 import org.ros.node.AbstractNodeMain;
@@ -43,8 +35,8 @@ import org.ros.node.ConnectedNode;
 import org.ros.node.service.ServiceResponseBuilder;
 import org.ros.node.service.ServiceServer;
 import org.ros.node.topic.Subscriber;
-import org.ros.rosjava.tf.Transform;
-import org.ros.rosjava.tf.pubsub.TransformListener;
+//import org.ros.rosjava.tf.Transform;
+//import org.ros.rosjava.tf.pubsub.TransformListener;
 import org.ros.time.TimeProvider;
 
 import com.kuka.roboticsAPI.deviceModel.LBR;
@@ -97,7 +89,7 @@ public class iiwaSubscriber extends AbstractNodeMain {
   private Subscriber<iiwa_msgs.JointPositionVelocity> jointPositionVelocitySubscriber;
   private Subscriber<iiwa_msgs.JointVelocity> jointVelocitySubscriber;
 
-  private TransformListener tfListener;
+  //private TransformListener tfListener;
 
   // Object to easily build iiwa_msgs from the current robot state
   private MessageGenerator helper;
@@ -315,13 +307,14 @@ public class iiwaSubscriber extends AbstractNodeMain {
     if (pose == null || pose.getHeader().getFrameId() == null || targetFrame == null) { return null; }
     if (pose.getHeader().getFrameId().equals(targetFrame)) { return pose; }
 
-    long time = pose.getHeader().getStamp().totalNsecs();
+    //long time = pose.getHeader().getStamp().totalNsecs();
 
     PoseStamped result = helper.buildMessage(PoseStamped._TYPE);
     result.getHeader().setFrameId(targetFrame);
     result.getHeader().setSeq(pose.getHeader().getSeq());
     result.getHeader().setStamp(pose.getHeader().getStamp());
 
+    /*
     if (tfListener.getTree().canTransform(pose.getHeader().getFrameId(), targetFrame)) {
       Quaternion q_raw = pose.getPose().getOrientation();
       Point t_raw = pose.getPose().getPosition();
@@ -348,6 +341,7 @@ public class iiwaSubscriber extends AbstractNodeMain {
     else {
       result.getPose().getOrientation().setW(1);
     }
+    */
 
     return result;
   }
@@ -435,7 +429,7 @@ public class iiwaSubscriber extends AbstractNodeMain {
     jointPositionSubscriber = connectedNode.newSubscriber(iiwaName + "/command/JointPosition", iiwa_msgs.JointPosition._TYPE);
     jointPositionVelocitySubscriber = connectedNode.newSubscriber(iiwaName + "/command/JointPositionVelocity", iiwa_msgs.JointPositionVelocity._TYPE);
     jointVelocitySubscriber = connectedNode.newSubscriber(iiwaName + "/command/JointVelocity", iiwa_msgs.JointVelocity._TYPE);
-    tfListener = new TransformListener(connectedNode);
+    //tfListener = new TransformListener(connectedNode);
 
     // Subscribers' callbacks
     cartesianPoseSubscriber.addMessageListener(new MessageListener<geometry_msgs.PoseStamped>() {
