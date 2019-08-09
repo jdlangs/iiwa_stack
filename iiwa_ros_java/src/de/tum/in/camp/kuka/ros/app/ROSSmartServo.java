@@ -31,6 +31,8 @@ import geometry_msgs.PoseStamped;
 import iiwa_msgs.ConfigureControlModeRequest;
 import iiwa_msgs.ConfigureControlModeResponse;
 import iiwa_msgs.JointPosition;
+import iiwa_msgs.JointSpline;
+import iiwa_msgs.MoveAlongJointSplineActionGoal;
 import iiwa_msgs.MoveAlongSplineActionGoal;
 import iiwa_msgs.MoveToCartesianPoseActionGoal;
 import iiwa_msgs.MoveToJointPositionActionGoal;
@@ -421,6 +423,10 @@ public class ROSSmartServo extends ROSBaseApplication {
             movePointToPointCartesianSpline(((MoveAlongSplineActionGoal) actionGoal.goal).getGoal().getSpline());
             break;
           }
+          case POINT_TO_POINT_JOINT_SPLINE: {
+            movePointToPointJointSpline(((MoveAlongJointSplineActionGoal) actionGoal.goal).getGoal().getSpline());
+            break;
+          }
           case POINT_TO_POINT_JOINT_POSITION: {
             movePointToPointJointPosition(((MoveToJointPositionActionGoal) actionGoal.goal).getGoal()
                 .getJointPosition());
@@ -495,7 +501,8 @@ public class ROSSmartServo extends ROSBaseApplication {
    */
   protected void activateMotionMode(CommandType commandType) {
     if (commandType == lastCommandType) {
-      if (commandType == CommandType.POINT_TO_POINT_CARTESIAN_SPLINE) {
+      if (commandType == CommandType.POINT_TO_POINT_CARTESIAN_SPLINE ||
+    	  commandType == CommandType.POINT_TO_POINT_JOINT_SPLINE) {
         // For some reason the application gets stuck when executing two spline motions
         // in a row. Switching the control mode to SmartServo and back in between
         // resolves the issue.
@@ -519,6 +526,7 @@ public class ROSSmartServo extends ROSBaseApplication {
       else if (lastCommandType == CommandType.POINT_TO_POINT_CARTESIAN_POSE
           || lastCommandType == CommandType.POINT_TO_POINT_CARTESIAN_POSE_LIN
           || lastCommandType == CommandType.POINT_TO_POINT_CARTESIAN_SPLINE
+          || lastCommandType == CommandType.POINT_TO_POINT_JOINT_SPLINE
           || lastCommandType == CommandType.POINT_TO_POINT_JOINT_POSITION) {
         motion = controlModeHandler.enableSmartServo(motion);
       }
@@ -530,6 +538,7 @@ public class ROSSmartServo extends ROSBaseApplication {
       else if (lastCommandType == CommandType.POINT_TO_POINT_CARTESIAN_POSE
           || lastCommandType == CommandType.POINT_TO_POINT_CARTESIAN_POSE_LIN
           || lastCommandType == CommandType.POINT_TO_POINT_CARTESIAN_SPLINE
+          || lastCommandType == CommandType.POINT_TO_POINT_JOINT_SPLINE
           || lastCommandType == CommandType.POINT_TO_POINT_JOINT_POSITION) {
         linearMotion = controlModeHandler.enableSmartServo(linearMotion);
       }
@@ -537,6 +546,7 @@ public class ROSSmartServo extends ROSBaseApplication {
     else if (commandType == CommandType.POINT_TO_POINT_CARTESIAN_POSE
         || commandType == CommandType.POINT_TO_POINT_CARTESIAN_POSE_LIN
         || commandType == CommandType.POINT_TO_POINT_CARTESIAN_SPLINE
+        || commandType == CommandType.POINT_TO_POINT_JOINT_SPLINE
         || commandType == CommandType.POINT_TO_POINT_JOINT_POSITION) {
       if (lastCommandType == CommandType.SMART_SERVO_CARTESIAN_POSE
           || lastCommandType == CommandType.SMART_SERVO_JOINT_POSITION
@@ -628,6 +638,16 @@ public class ROSSmartServo extends ROSBaseApplication {
     if (!success && actionServer.hasCurrentGoal()) {
       actionServer.markCurrentGoalFailed("Invalid spline.");
     }
+  }
+  
+  protected void movePointToPointJointSpline(JointSpline spline) {
+	activateMotionMode(CommandType.POINT_TO_POINT_JOINT_SPLINE);
+	boolean success = motions
+	    .pointToPointJointSplineMotion(controlModeHandler.getControlMode(), spline, subscriber);
+
+	if (!success && actionServer.hasCurrentGoal()) {
+	  actionServer.markCurrentGoalFailed("Invalid joint spline.");
+	}
   }
 
   protected void moveByJointPositionVelocity(iiwa_msgs.JointPositionVelocity commandPositionVelocity) {

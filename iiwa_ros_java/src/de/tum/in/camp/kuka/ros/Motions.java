@@ -46,7 +46,9 @@ import com.kuka.roboticsAPI.motionModel.CartesianPTP;
 import com.kuka.roboticsAPI.motionModel.LIN;
 import com.kuka.roboticsAPI.motionModel.PTP;
 import com.kuka.roboticsAPI.motionModel.Spline;
+import com.kuka.roboticsAPI.motionModel.SplineJP;
 import com.kuka.roboticsAPI.motionModel.SplineMotionCP;
+import com.kuka.roboticsAPI.motionModel.SplineMotionJP;
 import com.kuka.roboticsAPI.motionModel.controlModeModel.IMotionControlMode;
 
 import static com.kuka.roboticsAPI.motionModel.BasicMotions.ptp;
@@ -214,6 +216,38 @@ public class Motions {
     if (success) {
       Logger.debug("Executing spline with " + splineSegments.size() + " segments");
       Spline spline = new Spline(splineSegments.toArray(new SplineMotionCP<?>[splineSegments.size()]));
+      SpeedLimits.applySpeedLimits(spline);
+      endPointFrame.moveAsync(spline, new PTPMotionFinishedEventListener(publisher, actionServer));
+    }
+
+    return success;
+  }
+  
+  /**
+   * Executes a motion along a spline
+   * 
+   * @param motion
+   * @param splineMsg
+   * @param subscriber: Required for TF lookups
+   */
+  public boolean pointToPointJointSplineMotion(IMotionControlMode motion, iiwa_msgs.JointSpline splineMsg, iiwaSubscriber subscriber) {
+    if (splineMsg == null) { return false; }
+
+    boolean success = true;
+    List<SplineMotionJP<?>> splineSegments = new ArrayList<SplineMotionJP<?>>();
+    int i = 0;
+
+    for (iiwa_msgs.JointPosition segmentMsg : splineMsg.getSegments()) {
+      JointPosition jp = new JointPosition();
+      Conversions.rosJointQuantityToKuka(segmentMsg.getPosition(), jp);
+      SplineMotionJP<?> segment = ptp(jp);
+      splineSegments.add(segment);
+      i++;
+    }
+
+    if (success) {
+      Logger.debug("Executing spline with " + splineSegments.size() + " segments");
+      SplineJP spline = new SplineJP(splineSegments.toArray(new SplineMotionJP<?>[splineSegments.size()]));
       SpeedLimits.applySpeedLimits(spline);
       endPointFrame.moveAsync(spline, new PTPMotionFinishedEventListener(publisher, actionServer));
     }

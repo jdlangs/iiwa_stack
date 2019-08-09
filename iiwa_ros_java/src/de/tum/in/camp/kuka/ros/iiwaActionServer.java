@@ -46,6 +46,9 @@ import com.github.rosjava_actionlib.ActionServerListener;
 
 import de.tum.in.camp.kuka.ros.CommandTypes.CommandType;
 
+import iiwa_msgs.MoveAlongJointSplineActionFeedback;
+import iiwa_msgs.MoveAlongJointSplineActionGoal;
+import iiwa_msgs.MoveAlongJointSplineActionResult;
 import iiwa_msgs.MoveAlongSplineActionFeedback;
 import iiwa_msgs.MoveAlongSplineActionGoal;
 import iiwa_msgs.MoveAlongSplineActionResult;
@@ -113,6 +116,7 @@ public class iiwaActionServer extends AbstractNodeMain {
   private ActionServer<MoveToCartesianPoseActionGoal, MoveToCartesianPoseActionFeedback, MoveToCartesianPoseActionResult> cartesianPoseServer = null;
   private ActionServer<MoveToCartesianPoseActionGoal, MoveToCartesianPoseActionFeedback, MoveToCartesianPoseActionResult> cartesianPoseLinServer = null;
   private ActionServer<MoveAlongSplineActionGoal, MoveAlongSplineActionFeedback, MoveAlongSplineActionResult> moveAlongSplineServer = null;
+  private ActionServer<MoveAlongJointSplineActionGoal, MoveAlongJointSplineActionFeedback, MoveAlongJointSplineActionResult> moveAlongJointSplineServer = null;
   private ActionServer<MoveToJointPositionActionGoal, MoveToJointPositionActionFeedback, MoveToJointPositionActionResult> jointPositionServer = null;
   Queue<Goal<?>> goalQueue;
   Goal<?> currentGoal;
@@ -162,6 +166,15 @@ public class iiwaActionServer extends AbstractNodeMain {
         return goal.getGoalId().getId();
       }
     });
+    
+    moveAlongJointSplineServer = new ActionServer<MoveAlongJointSplineActionGoal, MoveAlongJointSplineActionFeedback, MoveAlongJointSplineActionResult>(node, iiwaName + "/action/move_along_joint_spline",
+        MoveAlongJointSplineActionGoal._TYPE, MoveAlongJointSplineActionFeedback._TYPE, MoveAlongJointSplineActionResult._TYPE);
+    moveAlongJointSplineServer.attachListener(new iiwaActionServerListener<MoveAlongJointSplineActionGoal>(this, CommandType.POINT_TO_POINT_JOINT_SPLINE) {
+      @Override
+      public String getGoalId(MoveAlongJointSplineActionGoal goal) {
+        return goal.getGoalId().getId();
+      }
+    });
 
     jointPositionServer = new ActionServer<MoveToJointPositionActionGoal, MoveToJointPositionActionFeedback, MoveToJointPositionActionResult>(node, iiwaName
         + "/action/move_to_joint_position", MoveToJointPositionActionGoal._TYPE, MoveToJointPositionActionFeedback._TYPE, MoveToJointPositionActionResult._TYPE);
@@ -178,6 +191,7 @@ public class iiwaActionServer extends AbstractNodeMain {
     cartesianPoseServer.finish();
     cartesianPoseLinServer.finish();
     moveAlongSplineServer.finish();
+    moveAlongJointSplineServer.finish();
     jointPositionServer.finish();
     goalQueue.clear();
     goalQueue = null;
@@ -270,6 +284,23 @@ public class iiwaActionServer extends AbstractNodeMain {
           moveAlongSplineServer.setGoalStatus(result.getStatus(), currentGoal.goalId);
           break;
         }
+        case POINT_TO_POINT_JOINT_SPLINE: {
+          MoveAlongJointSplineActionResult result = moveAlongJointSplineServer.newResultMessage();
+          result.getResult().setSuccess(succeeded);
+          result.getResult().setError(error_msg);
+          result.getStatus().getGoalId().setId(currentGoal.goalId);
+          if (succeeded) {
+            result.getStatus().setStatus(GoalStatus.SUCCEEDED);
+            moveAlongJointSplineServer.setSucceed(currentGoal.goalId);
+          }
+          else {
+            result.getStatus().setStatus(GoalStatus.ABORTED);
+            moveAlongJointSplineServer.setAborted(currentGoal.goalId);
+          }
+          moveAlongJointSplineServer.sendResult(result);
+          moveAlongJointSplineServer.setGoalStatus(result.getStatus(), currentGoal.goalId);
+          break;
+        }
         case POINT_TO_POINT_JOINT_POSITION: {
           MoveToJointPositionActionResult result = jointPositionServer.newResultMessage();
           result.getResult().setSuccess(succeeded);
@@ -346,6 +377,9 @@ public class iiwaActionServer extends AbstractNodeMain {
           break;
         case POINT_TO_POINT_CARTESIAN_SPLINE:
           moveAlongSplineServer.sendStatusTick();
+          break;
+        case POINT_TO_POINT_JOINT_SPLINE:
+          moveAlongJointSplineServer.sendStatusTick();
           break;
         case POINT_TO_POINT_JOINT_POSITION:
           jointPositionServer.sendStatusTick();
