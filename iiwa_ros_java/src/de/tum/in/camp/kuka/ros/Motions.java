@@ -231,18 +231,20 @@ public class Motions {
    * @param subscriber: Required for TF lookups
    */
   public boolean pointToPointJointSplineMotion(IMotionControlMode motion, iiwa_msgs.JointSpline splineMsg, iiwaSubscriber subscriber) {
-    if (splineMsg == null) { return false; }
+    if (splineMsg == null) {
+    	Logger.error("No spline message provided");
+    	return false; 
+    }
 
     boolean success = true;
     List<SplineMotionJP<?>> splineSegments = new ArrayList<SplineMotionJP<?>>();
-    int i = 0;
-
+    
     for (iiwa_msgs.JointPosition segmentMsg : splineMsg.getSegments()) {
-      JointPosition jp = new JointPosition();
+      // TODO: Replace '7' with a constant (get rid of that magic number!)
+      com.kuka.roboticsAPI.deviceModel.JointPosition jp = new com.kuka.roboticsAPI.deviceModel.JointPosition(7);
       Conversions.rosJointQuantityToKuka(segmentMsg.getPosition(), jp);
       SplineMotionJP<?> segment = ptp(jp);
       splineSegments.add(segment);
-      i++;
     }
 
     if (success) {
